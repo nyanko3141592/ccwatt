@@ -8,14 +8,21 @@ export type ModelCategory =
   | 'small'    // Lightweight models
   | 'unknown'
 
-// Wh per token (estimates based on model size and efficiency)
+// Wh per token (estimates based on 2024-2025 research)
+// Sources: arxiv.org/html/2505.09598v1, arxiv.org/html/2512.03024v1
+// GPT-4o: ~0.34 Wh/query ≈ 0.001 Wh/token (300-400 tokens)
+// Llama3-70B on H100: ~0.39 J/token ≈ 0.0001 Wh/token
 const ENERGY_PER_TOKEN: Record<ModelCategory, number> = {
-  huge: 0.003,     // ~175B+ params (GPT-4, Opus)
-  large: 0.001,    // ~70B params (Sonnet, GPT-4-turbo)
-  medium: 0.0003,  // ~20B params (Haiku, GPT-3.5)
-  small: 0.0001,   // ~7B params (small models)
-  unknown: 0.001,  // Default to large
+  huge: 0.001,      // ~175B+ params (GPT-4, Opus) - ~3.6 J/token
+  large: 0.0003,    // ~70B params (Sonnet, GPT-4-turbo) - ~1 J/token
+  medium: 0.0001,   // ~20B params (Haiku, GPT-3.5) - ~0.36 J/token
+  small: 0.00003,   // ~7B params (small models) - ~0.1 J/token
+  unknown: 0.0003,  // Default to large
 }
+
+// Cache read tokens have near-zero energy cost (just memory retrieval)
+// Cache creation tokens have full energy cost
+const CACHE_READ_ENERGY_FACTOR = 0.01  // 1% of normal cost
 
 // CO2 emission factor (kg-CO2/kWh) - global average
 const CO2_PER_KWH = 0.5
@@ -144,7 +151,16 @@ export function calculateEnergy(usage: TokenUsage): EnergyResult {
   const totalTokens = usage.inputTokens + usage.outputTokens + cacheTokens + usage.reasoningTokens
 
   const category = getModelCategory(usage.model)
-  const energyWh = totalTokens * ENERGY_PER_TOKEN[category]
+  const baseEnergy = ENERGY_PER_TOKEN[category]
+
+  // Calculate energy with proper cache handling
+  // - Input/Output/Reasoning tokens: full energy cost
+  // - Cache creation: full energy cost (computation needed)
+  // - Cache read: minimal energy (just memory retrieval)
+  const computeTokens = usage.inputTokens + usage.outputTokens + usage.reasoningTokens + usage.cacheCreationTokens
+  const cacheReadEnergy = usage.cacheReadTokens * baseEnergy * CACHE_READ_ENERGY_FACTOR
+
+  const energyWh = (computeTokens * baseEnergy) + cacheReadEnergy
   const co2Kg = (energyWh / 1000) * CO2_PER_KWH
   const co2Grams = co2Kg * 1000
   const co2PerTreePerDay = (CO2_PER_TREE_PER_YEAR * 1000) / 365
