@@ -108,54 +108,36 @@ function generateProgressBar(percentage: number, width: number = 20): string {
   return bar
 }
 
-// Tree ASCII art (changes with usage)
+// Generate tree visualization based on usage
 function getTreeArt(treeDays: number): string[] {
-  if (treeDays < 0.1) {
+  // Calculate number of trees needed (1 tree = 1 day of absorption)
+  const treeCount = Math.ceil(treeDays)
+
+  if (treeCount === 0) {
     return [
-      '    ',
-      ' 🌱 ',
-      '    ',
-    ]
-  } else if (treeDays < 1) {
-    return [
-      '  🌿  ',
-      '  ||  ',
-      ' _||_ ',
-    ]
-  } else if (treeDays < 7) {
-    return [
-      '   🌳   ',
-      '   ||   ',
-      '  _||_  ',
-      ' /____\\ ',
-    ]
-  } else if (treeDays < 30) {
-    return [
-      '  🌳💦  ',
-      '   ||   ',
-      '  _||_  ',
-      ' /____\\ ',
-    ]
-  } else if (treeDays < 100) {
-    return [
-      ' 🌲🌳🌲 ',
-      '  💦💦  ',
-      '  |||||  ',
-    ]
-  } else if (treeDays < 365) {
-    return [
-      '🌲🔥🌳🔥🌲',
-      '   💦💦   ',
-      '  |||||||  ',
-    ]
-  } else {
-    return [
-      '  🪵  🪵  🪵  ',
-      ' 💀 R.I.P. 💀 ',
-      '     🌱      ',
-      '  (hope remains) ',
+      '     🌱     ',
+      '  (a tiny sprout)',
     ]
   }
+
+  // Build rows of trees (max 10 per row)
+  const maxPerRow = 10
+  const displayCount = Math.min(treeCount, 50) // Cap display at 50
+  const rows: string[] = []
+
+  let remaining = displayCount
+  while (remaining > 0) {
+    const thisRow = Math.min(remaining, maxPerRow)
+    rows.push('🌳'.repeat(thisRow))
+    remaining -= thisRow
+  }
+
+  // Add overflow indicator
+  if (treeCount > 50) {
+    rows.push(`  ...and ${(treeCount - 50).toLocaleString()} more trees`)
+  }
+
+  return rows
 }
 
 export function displayResult(result: EnergyResult, sessionCount: number): void {
@@ -172,9 +154,15 @@ export function displayResult(result: EnergyResult, sessionCount: number): void 
   console.log(chalk.bold.cyan('  ╰─────────────────────────────────────╯'))
   console.log()
 
-  // ASCII art
+  // Tree visualization
+  const treeCount = Math.ceil(result.treeDays)
+  console.log(chalk.gray('  🌳 Trees needed to absorb this CO2'))
+  console.log(chalk.gray('  ─────────────────────────────────────'))
   for (const line of treeArt) {
-    console.log(chalk.green('                ' + line))
+    console.log(chalk.green('     ' + line))
+  }
+  if (treeCount > 0) {
+    console.log(chalk.gray(`     (${treeCount.toLocaleString()} tree-days of absorption)`))
   }
   console.log()
 
