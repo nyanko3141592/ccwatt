@@ -8,7 +8,7 @@ import { calculateEnergy, aggregateUsages } from './lib/calculator.js'
 import { displayResult, displayNoData } from './lib/display.js'
 
 program
-  .name('watt')
+  .name('ccwatt')
   .description('How much power did your AI use? 🌳')
   .version('0.1.0')
   .option('-j, --json', 'Output as JSON')

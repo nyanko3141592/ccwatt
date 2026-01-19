@@ -1,11 +1,10 @@
 {
-  "name": "watt-did-ai-cost",
+  "name": "ccwatt",
   "version": "0.1.0",
-  "description": "あなたのAI、何ワット使った? - Claude Code の電力消費を可視化",
+  "description": "How much power did your AI use? - Visualize Claude Code's energy consumption",
   "type": "module",
   "bin": {
-    "watt": "./dist/index.js",
-    "watt-did-ai-cost": "./dist/index.js"
+    "ccwatt": "./dist/index.js"
   },
   "files": [
     "dist"

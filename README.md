@@ -7,7 +7,7 @@ A CLI tool that visualizes the environmental impact of your Claude Code usage. S
 ## Quick Start
 
 ```bash
-npx watt-did-ai-cost
+npx ccwatt
 ```
 
 That's it. No setup required.
@@ -56,8 +56,8 @@ All data stays on your machine. Nothing is sent anywhere.
 ## Options
 
 ```bash
-watt --json     # Output as JSON
-watt --quiet    # Show trees only (great for prompt integration)
+ccwatt --json     # Output as JSON
+ccwatt --quiet    # Show trees only (great for prompt integration)
 ```
 
 ## Calculation Basis
