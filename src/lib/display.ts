@@ -103,25 +103,32 @@ export function displayResult(result: EnergyResult, sessionCount: number, source
   if (treeCount === 0) {
     console.log(chalk.green('     🌱'))
     console.log(chalk.gray('     A tiny sprout. You\'re eco-friendly!'))
-  } else if (treeCount <= 30) {
+  } else if (treeCount < 10) {
+    // Small numbers: 1 emoji = 1 tree
     console.log(chalk.green('     ' + '🌳'.repeat(treeCount)))
-    console.log(chalk.gray(`     ${treeCount} tree-days needed to absorb your CO2`))
-  } else if (treeCount <= 100) {
-    const rows = Math.ceil(treeCount / 10)
-    for (let i = 0; i < Math.min(rows, 5); i++) {
-      const count = Math.min(10, treeCount - i * 10)
-      console.log(chalk.green('     ' + '🌳'.repeat(count)))
-    }
-    if (rows > 5) {
-      console.log(chalk.gray(`     ...and ${treeCount - 50} more trees`))
-    }
-    console.log(chalk.gray(`     ${treeCount.toLocaleString()} tree-days needed`))
+    console.log(chalk.gray(`     ${treeCount} tree-day${treeCount === 1 ? '' : 's'} needed to absorb your CO2`))
   } else {
-    console.log(chalk.green('     ' + '🌳'.repeat(10)))
-    console.log(chalk.green('     ' + '🌳'.repeat(10)))
-    console.log(chalk.green('     ' + '🌳'.repeat(10)))
-    console.log(chalk.yellow(`     ...and ${(treeCount - 30).toLocaleString()} more trees working overtime`))
-    console.log(chalk.gray(`     ${treeCount.toLocaleString()} tree-days needed to absorb your CO2`))
+    // Larger numbers: 1 emoji = 10 trees for visual impact
+    const emojiCount = Math.ceil(treeCount / 10)
+    const EMOJIS_PER_ROW = 10
+    const MAX_ROWS = 15  // Max 150 emojis = 1500 trees before abbreviating
+
+    if (emojiCount <= MAX_ROWS * EMOJIS_PER_ROW) {
+      // Display all emojis
+      const rows = Math.ceil(emojiCount / EMOJIS_PER_ROW)
+      for (let i = 0; i < rows; i++) {
+        const count = Math.min(EMOJIS_PER_ROW, emojiCount - i * EMOJIS_PER_ROW)
+        console.log(chalk.green('     ' + '🌳'.repeat(count)))
+      }
+    } else {
+      // Abbreviate for massive usage
+      for (let i = 0; i < MAX_ROWS; i++) {
+        console.log(chalk.green('     ' + '🌳'.repeat(EMOJIS_PER_ROW)))
+      }
+      const remaining = treeCount - (MAX_ROWS * EMOJIS_PER_ROW * 10)
+      console.log(chalk.yellow(`     ...and ${remaining.toLocaleString()} more trees working overtime`))
+    }
+    console.log(chalk.gray(`     🌳 = 10 trees | ${treeCount.toLocaleString()} tree-days needed`))
   }
 
   console.log()
