@@ -16,20 +16,6 @@ const RANKS = [
   { maxCo2: Infinity, rank: 'S++', title: 'Planet Destroyer', color: chalk.magenta },
 ]
 
-// Achievements
-const ACHIEVEMENTS = [
-  { id: 'first_wh', emoji: '⚡', name: 'First Watt', check: (r: EnergyResult) => r.energyWh >= 1 },
-  { id: 'kwh_club', emoji: '🔌', name: '1kWh Club', check: (r: EnergyResult) => r.energyWh >= 1000 },
-  { id: 'carbon_kg', emoji: '💨', name: 'Kilo Carbon', check: (r: EnergyResult) => r.co2Grams >= 1000 },
-  { id: 'tree_week', emoji: '🌲', name: 'Tree Week', check: (r: EnergyResult) => r.treeDays >= 7 },
-  { id: 'tree_month', emoji: '🌳', name: 'Forest Month', check: (r: EnergyResult) => r.treeDays >= 30 },
-  { id: 'tree_year', emoji: '🏕️', name: 'Year of Trees', check: (r: EnergyResult) => r.treeDays >= 365 },
-  { id: 'million', emoji: '🎰', name: 'Token Millionaire', check: (r: EnergyResult) => r.totalTokens >= 1_000_000 },
-  { id: 'billion', emoji: '💎', name: 'Token Billionaire', check: (r: EnergyResult) => r.totalTokens >= 1_000_000_000 },
-  { id: 'cache_heavy', emoji: '📦', name: 'Cache Monster', check: (r: EnergyResult) => r.cacheTokens > r.inputTokens * 10 },
-  { id: 'output_heavy', emoji: '📝', name: 'Verbose Mode', check: (r: EnergyResult) => r.outputTokens > r.inputTokens },
-]
-
 // Random titles for flavor
 const FLAVOR_TITLES = [
   'Digital Druid', 'Byte Burner', 'Silicon Sorcerer', 'Token Titan',
@@ -53,10 +39,6 @@ function getNextRank(co2Grams: number) {
   return null
 }
 
-function getUnlockedAchievements(result: EnergyResult) {
-  return ACHIEVEMENTS.filter(a => a.check(result))
-}
-
 function formatNumber(n: number): string {
   if (n >= 1_000_000_000) return (n / 1_000_000_000).toFixed(2) + 'B'
   if (n >= 1_000_000) return (n / 1_000_000).toFixed(2) + 'M'
@@ -71,7 +53,6 @@ function generateBar(value: number, max: number, width: number = 10, filled = '�
 }
 
 function getLevel(co2Grams: number): number {
-  // Level = log2(co2 + 1) * 5, so it grows slower at higher levels
   return Math.floor(Math.log2(co2Grams + 1) * 5)
 }
 
@@ -84,11 +65,18 @@ export interface SourceCounts {
   opencode: number
 }
 
+// Simple box line helper
+const W = 41 // inner width
+const line = (s: string) => chalk.gray('  ┃') + s + chalk.gray('┃')
+const top = () => chalk.gray('  ┏' + '━'.repeat(W) + '┓')
+const mid = () => chalk.gray('  ┣' + '━'.repeat(W) + '┫')
+const bot = () => chalk.gray('  ┗' + '━'.repeat(W) + '┛')
+const pad = (s: string, len: number) => s + ' '.repeat(Math.max(0, W - len))
+
 export function displayResult(result: EnergyResult, sessionCount: number, sources?: SourceCounts): void {
   const rank = getRank(result.co2Grams)
   const nextRank = getNextRank(result.co2Grams)
   const level = getLevel(result.co2Grams)
-  const achievements = getUnlockedAchievements(result)
   const flavorTitle = getRandomFlavorTitle()
 
   // Energy/CO2 formatted
@@ -100,90 +88,95 @@ export function displayResult(result: EnergyResult, sessionCount: number, source
     : `${result.co2Grams.toFixed(1)} g`
 
   // Calculate stat percentages (for visual bars)
-  const powerPercent = Math.min(result.energyWh / 10000, 1) // 10kWh = full
-  const co2Percent = Math.min(result.co2Grams / 100000, 1) // 100kg = full
-  const treePercent = Math.min(result.treeDays / 365, 1) // 1 year = full
+  const powerPercent = Math.min(result.energyWh / 10000, 1)
+  const co2Percent = Math.min(result.co2Grams / 100000, 1)
+  const treePercent = Math.min(result.treeDays / 365, 1)
 
   console.log()
 
-  // Main status box
-  console.log(chalk.gray('  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓'))
-  console.log(chalk.gray('  ┃') + chalk.bold.white('  ⚡ CARBON STATUS REPORT ⚡               ') + chalk.gray('┃'))
-  console.log(chalk.gray('  ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫'))
+  // ===== ENVIRONMENTAL IMPACT FIRST =====
+  const treeCount = Math.ceil(result.treeDays)
+  console.log(chalk.bold.green('  🌍 ENVIRONMENTAL IMPACT'))
+  console.log(chalk.gray('  ─────────────────────────────────────────'))
+  console.log()
 
-  // Player info
-  console.log(chalk.gray('  ┃') + `  ${chalk.bold.white(`Lv.${level}`)} ${chalk.gray(flavorTitle)}`.padEnd(52) + chalk.gray('┃'))
-  console.log(chalk.gray('  ┃') + `  ${rank.color(`【 ${rank.rank} 】`)} ${chalk.bold(rank.title)}`.padEnd(55) + chalk.gray('┃'))
-  console.log(chalk.gray('  ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫'))
-
-  // Stats with bars
-  const pwrBar = chalk.yellow(generateBar(powerPercent, 1, 12))
-  const co2Bar = chalk.cyan(generateBar(co2Percent, 1, 12))
-  const treeBar = chalk.green(generateBar(treePercent, 1, 12))
-
-  console.log(chalk.gray('  ┃') + `  ⚡ PWR  ${chalk.bold.yellow(energyStr.padStart(12))} ${pwrBar} ` + chalk.gray('┃'))
-  console.log(chalk.gray('  ┃') + `  💨 CO2  ${chalk.bold.cyan(co2Str.padStart(12))} ${co2Bar} ` + chalk.gray('┃'))
-  console.log(chalk.gray('  ┃') + `  🌳 TREE ${chalk.bold.green((Math.ceil(result.treeDays) + ' days').padStart(12))} ${treeBar} ` + chalk.gray('┃'))
-
-  console.log(chalk.gray('  ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫'))
-
-  // Token breakdown
-  console.log(chalk.gray('  ┃') + chalk.gray('  📊 TOKEN USAGE                           ') + chalk.gray('┃'))
-  console.log(chalk.gray('  ┃') + `     Input:  ${chalk.white(formatNumber(result.inputTokens).padStart(10))}              ` + chalk.gray('┃'))
-  console.log(chalk.gray('  ┃') + `     Output: ${chalk.white(formatNumber(result.outputTokens).padStart(10))}              ` + chalk.gray('┃'))
-  console.log(chalk.gray('  ┃') + `     Cache:  ${chalk.white(formatNumber(result.cacheTokens).padStart(10))}              ` + chalk.gray('┃'))
-  console.log(chalk.gray('  ┃') + `     ${chalk.bold('TOTAL')}: ${chalk.bold.white(formatNumber(result.totalTokens).padStart(11))}              ` + chalk.gray('┃'))
-
-  console.log(chalk.gray('  ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫'))
-
-  // Achievements
-  console.log(chalk.gray('  ┃') + chalk.gray('  🏆 ACHIEVEMENTS                          ') + chalk.gray('┃'))
-  if (achievements.length > 0) {
-    // Display up to 6 achievements per row, max 2 rows
-    const displayAchievements = achievements.slice(0, 12)
-    for (let i = 0; i < displayAchievements.length; i += 6) {
-      const row = displayAchievements.slice(i, i + 6)
-      const achievementStr = row.map(a => `${a.emoji}`).join(' ')
-      console.log(chalk.gray('  ┃') + `     ${achievementStr}`.padEnd(44) + chalk.gray('┃'))
+  if (treeCount === 0) {
+    console.log(chalk.green('     🌱'))
+    console.log(chalk.gray('     A tiny sprout. You\'re eco-friendly!'))
+  } else if (treeCount <= 30) {
+    console.log(chalk.green('     ' + '🌳'.repeat(treeCount)))
+    console.log(chalk.gray(`     ${treeCount} tree-days needed to absorb your CO2`))
+  } else if (treeCount <= 100) {
+    const rows = Math.ceil(treeCount / 10)
+    for (let i = 0; i < Math.min(rows, 5); i++) {
+      const count = Math.min(10, treeCount - i * 10)
+      console.log(chalk.green('     ' + '🌳'.repeat(count)))
     }
-    // Show names of first few
-    const names = achievements.slice(0, 3).map(a => a.name).join(' · ')
-    console.log(chalk.gray('  ┃') + chalk.gray(`     ${names}`.slice(0, 43).padEnd(43)) + chalk.gray('┃'))
+    if (rows > 5) {
+      console.log(chalk.gray(`     ...and ${treeCount - 50} more trees`))
+    }
+    console.log(chalk.gray(`     ${treeCount.toLocaleString()} tree-days needed`))
   } else {
-    console.log(chalk.gray('  ┃') + chalk.gray('     (none yet - keep going!)              ') + chalk.gray('┃'))
+    console.log(chalk.green('     ' + '🌳'.repeat(10)))
+    console.log(chalk.green('     ' + '🌳'.repeat(10)))
+    console.log(chalk.green('     ' + '🌳'.repeat(10)))
+    console.log(chalk.yellow(`     ...and ${(treeCount - 30).toLocaleString()} more trees working overtime`))
+    console.log(chalk.gray(`     ${treeCount.toLocaleString()} tree-days needed to absorb your CO2`))
   }
 
-  console.log(chalk.gray('  ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫'))
+  console.log()
+  console.log()
+
+  // ===== STATUS REPORT BOX =====
+  console.log(top())
+  console.log(line(pad(chalk.bold.white(' ⚡ CARBON STATUS REPORT ⚡'), 28)))
+  console.log(mid())
+
+  // Player info
+  const lvl = `Lv.${level}`
+  console.log(line(pad(` ${chalk.bold.white(lvl)} ${chalk.gray(flavorTitle)}`, 2 + lvl.length + flavorTitle.length)))
+
+  const badge = `【${rank.rank}】`
+  console.log(line(pad(` ${rank.color(badge)} ${chalk.bold(rank.title)}`, 2 + badge.length + rank.title.length)))
+
+  console.log(mid())
+
+  // Stats with bars
+  const pwrBar = chalk.yellow(generateBar(powerPercent, 1, 10))
+  const co2Bar = chalk.cyan(generateBar(co2Percent, 1, 10))
+  const treeBar = chalk.green(generateBar(treePercent, 1, 10))
+
+  console.log(line(` ⚡ PWR  ${chalk.bold.yellow(energyStr.padStart(10))} ${pwrBar} `))
+  console.log(line(` 💨 CO2  ${chalk.bold.cyan(co2Str.padStart(10))} ${co2Bar} `))
+  const treeDaysStr = Math.ceil(result.treeDays) + ' days'
+  console.log(line(` 🌳 TREE ${chalk.bold.green(treeDaysStr.padStart(10))} ${treeBar} `))
+
+  console.log(mid())
+
+  // Token breakdown
+  console.log(line(pad(chalk.gray(' 📊 TOKEN USAGE'), 15)))
+  console.log(line(pad(`    Input:  ${chalk.white(formatNumber(result.inputTokens).padStart(12))}`, 26)))
+  console.log(line(pad(`    Output: ${chalk.white(formatNumber(result.outputTokens).padStart(12))}`, 26)))
+  console.log(line(pad(`    Cache:  ${chalk.white(formatNumber(result.cacheTokens).padStart(12))}`, 26)))
+  console.log(line(pad(`    ${chalk.bold('TOTAL:')} ${chalk.bold.white(formatNumber(result.totalTokens).padStart(12))}`, 26)))
+
+  console.log(mid())
 
   // Next rank progress
   if (nextRank) {
     const progress = result.co2Grams / nextRank.maxCo2
     const progressBar = generateBar(progress, 1, 20, '▓', '░')
-    console.log(chalk.gray('  ┃') + chalk.gray('  📈 NEXT RANK                             ') + chalk.gray('┃'))
-    console.log(chalk.gray('  ┃') + `     ${nextRank.color(nextRank.title)}`.padEnd(52) + chalk.gray('┃'))
-    console.log(chalk.gray('  ┃') + `     [${progressBar}] ${(progress * 100).toFixed(0)}%    ` + chalk.gray('┃'))
+    const pct = `${(progress * 100).toFixed(0)}%`
+    console.log(line(pad(chalk.gray(' 📈 NEXT RANK'), 13)))
+    console.log(line(pad(`    ${nextRank.color(nextRank.title)}`, 4 + nextRank.title.length)))
+    console.log(line(`    [${progressBar}] ${pct.padStart(4)}   `))
   } else {
-    console.log(chalk.gray('  ┃') + chalk.magenta('  👑 MAX RANK ACHIEVED                     ') + chalk.gray('┃'))
-    console.log(chalk.gray('  ┃') + chalk.gray('     Congratulations...? 🌍💀              ') + chalk.gray('┃'))
+    console.log(line(pad(chalk.magenta(' 👑 MAX RANK ACHIEVED'), 21)))
+    console.log(line(pad(chalk.gray('    Congratulations...? 🌍💀'), 27)))
   }
 
-  console.log(chalk.gray('  ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛'))
+  console.log(bot())
   console.log()
-
-  // Earth impact summary (outside box)
-  const treeCount = Math.ceil(result.treeDays)
-  if (treeCount > 0) {
-    console.log(chalk.gray('  🌍 Environmental Impact:'))
-    if (treeCount <= 50) {
-      console.log(chalk.green('     ' + '🌳'.repeat(treeCount)))
-    } else {
-      console.log(chalk.green('     ' + '🌳'.repeat(10)))
-      console.log(chalk.green('     ' + '🌳'.repeat(10)))
-      console.log(chalk.gray(`     ...and ${(treeCount - 20).toLocaleString()} more trees working overtime`))
-    }
-    console.log(chalk.gray(`     ${treeCount.toLocaleString()} tree-days needed to absorb your CO2`))
-    console.log()
-  }
 
   // Session info
   if (sources && (sources.claudeCode > 0 || sources.opencode > 0)) {
@@ -199,18 +192,23 @@ export function displayResult(result: EnergyResult, sessionCount: number, source
 
 export function displayNoData(): void {
   console.log()
-  console.log(chalk.gray('  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓'))
-  console.log(chalk.gray('  ┃') + chalk.bold.white('  ⚡ CARBON STATUS REPORT ⚡               ') + chalk.gray('┃'))
-  console.log(chalk.gray('  ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫'))
-  console.log(chalk.gray('  ┃') + `  ${chalk.bold.white('Lv.0')} ${chalk.green('Eco Warrior')}`.padEnd(52) + chalk.gray('┃'))
-  console.log(chalk.gray('  ┃') + `  ${chalk.green('【 ? 】')} ${chalk.gray('No data yet')}`.padEnd(52) + chalk.gray('┃'))
-  console.log(chalk.gray('  ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫'))
-  console.log(chalk.gray('  ┃') + chalk.yellow('  🔍 No AI usage data found                ') + chalk.gray('┃'))
-  console.log(chalk.gray('  ┃') + chalk.gray('     Supported: Claude Code, OpenCode      ') + chalk.gray('┃'))
-  console.log(chalk.gray('  ┃') + chalk.gray('     Start using an AI coding tool!        ') + chalk.gray('┃'))
-  console.log(chalk.gray('  ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫'))
-  console.log(chalk.gray('  ┃') + chalk.green('  🌱 Carbon footprint: 0                   ') + chalk.gray('┃'))
-  console.log(chalk.gray('  ┃') + chalk.green('     Earth thanks you... for now.          ') + chalk.gray('┃'))
-  console.log(chalk.gray('  ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛'))
+  console.log(chalk.bold.green('  🌍 ENVIRONMENTAL IMPACT'))
+  console.log(chalk.gray('  ─────────────────────────────────────────'))
+  console.log()
+  console.log(chalk.green('     🌱'))
+  console.log(chalk.gray('     No carbon footprint yet. Earth is happy!'))
+  console.log()
+  console.log()
+
+  console.log(top())
+  console.log(line(pad(chalk.bold.white(' ⚡ CARBON STATUS REPORT ⚡'), 28)))
+  console.log(mid())
+  console.log(line(pad(` ${chalk.bold.white('Lv.0')} ${chalk.green('Eco Warrior')}`, 17)))
+  console.log(line(pad(` ${chalk.green('【?】')} ${chalk.gray('No data yet')}`, 18)))
+  console.log(mid())
+  console.log(line(pad(chalk.yellow(' 🔍 No AI usage data found'), 26)))
+  console.log(line(pad(chalk.gray('    Supported: Claude Code, OpenCode'), 36)))
+  console.log(line(pad(chalk.gray('    Start using an AI coding tool!'), 34)))
+  console.log(bot())
   console.log()
 }
