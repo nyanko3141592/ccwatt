@@ -79,7 +79,7 @@ Not guilt. Awareness.
 
 AI is transformative. But every computation has a cost. When you see the trees, you start to think. When you think, you start to choose.
 
-**[Read more](https://nyanko3141592.github.io/watt-did-ai-cost/)**
+**[Read more](https://nyanko3141592.github.io/ccwatt/)**
 
 ## License
 
