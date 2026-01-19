@@ -1,8 +1,8 @@
-# Watt Did AI Cost?
+# ccwatt
 
 **How much power did your AI use?**
 
-A CLI tool that visualizes the environmental impact of your Claude Code usage. See your token consumption translated into energy, CO2, and trees.
+A CLI tool that visualizes the environmental impact of your AI coding assistant usage. Supports Claude Code and OpenCode.
 
 ## Quick Start
 
@@ -10,68 +10,124 @@ A CLI tool that visualizes the environmental impact of your Claude Code usage. S
 npx ccwatt
 ```
 
-That's it. No setup required.
+## Supported Tools
 
-## What It Does
-
-Scans your local Claude Code session data (`~/.claude/projects/`) and calculates:
-
-- **Energy consumption** (Wh/kWh)
-- **CO2 emissions** (grams/kg)
-- **Tree-days** needed to absorb the CO2
-
-All data stays on your machine. Nothing is sent anywhere.
+| Tool | Data Location |
+|------|---------------|
+| 🟠 Claude Code | `~/.claude/projects/` |
+| 🔷 OpenCode | `~/.local/share/opencode/storage/` |
 
 ## Sample Output
 
 ```
-  ╭─────────────────────────────────────╮
-  │    ⚡ Watt Did AI Cost? ⚡          │
-  │    How much power did your AI use? │
-  ╰─────────────────────────────────────╯
+  🌍 ENVIRONMENTAL IMPACT
+  ─────────────────────────────────────────
 
-  🌳 Trees needed to absorb this CO2
-  ─────────────────────────────────────
      🌳🌳🌳🌳🌳🌳🌳🌳🌳🌳
-     🌳🌳🌳🌳🌳
-     (15 tree-days of absorption)
+     🌳🌳🌳🌳🌳🌳🌳🌳🌳🌳
+     ...and 638 more trees working overtime
+     668 tree-days needed to absorb your CO2
 
-  📊 Token Usage
-  ─────────────────────────────────────
-     Input: 1.2M  Output: 800K  Cache: 5M
-     Total: 7M tokens
 
-  ⚡ Energy & CO2
-  ─────────────────────────────────────
-     Power: 7.0 kWh
-     CO2:   3.5 kg
+  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+  ┃ ⚡ CARBON STATUS REPORT ⚡             ┃
+  ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+  ┃ Lv.73 Silicon Sorcerer                  ┃
+  ┃ 【A】 Carbon Sorcerer                     ┃
+  ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+  ┃ ⚡ PWR   51.18 kWh ██████████ ┃
+  ┃ 💨 CO2    25.59 kg ███░░░░░░░ ┃
+  ┃ 🌳 TREE   668 days ██████████ ┃
+  ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
-  🎯 With this much power you could...
-  ─────────────────────────────────────
-     ☕ brew 70 cups of coffee
-     📱 do 700 phone charges
-     🎮 play 35 hours of PS5
+  📁 🟠 Claude Code: 381  🔷 OpenCode: 93
 ```
 
 ## Options
 
 ```bash
-ccwatt --json     # Output as JSON
-ccwatt --quiet    # Show trees only (great for prompt integration)
+ccwatt                  # Scan all sources
+ccwatt --claude-only    # Claude Code only
+ccwatt --opencode-only  # OpenCode only
+ccwatt --json           # Output as JSON
+ccwatt --quiet          # Show trees only
 ```
 
-## Calculation Basis
+## Calculation Methodology
 
-| Model | Estimated Energy |
-|-------|-----------------|
-| Opus | ~0.003 Wh/token |
-| Sonnet | ~0.001 Wh/token |
-| Haiku | ~0.0003 Wh/token |
+### Energy per Token
 
-- CO2 factor: 0.5 kg-CO2/kWh (global average)
-- Tree absorption: 14 kg CO2/year per tree
+Based on 2024-2025 research on LLM inference energy consumption:
 
-*These are estimates based on research. Anthropic has not published official figures.*
+| Model Size | Energy | Examples |
+|------------|--------|----------|
+| Huge (~175B+) | 0.001 Wh/token | GPT-4, Claude Opus, o1 |
+| Large (~70B) | 0.0003 Wh/token | Claude Sonnet, GPT-4o, Gemini Pro |
+| Medium (~20B) | 0.0001 Wh/token | Claude Haiku, GPT-3.5, Gemini Flash |
+| Small (~7B) | 0.00003 Wh/token | Mistral Small, Llama-8B |
+
+**Research sources:**
+- [How Hungry is AI? Benchmarking Energy, Water, and Carbon Footprint of LLM Inference](https://arxiv.org/abs/2505.09598) - Benchmarked 30 LLMs
+- [TokenPowerBench: Benchmarking the Power Consumption of LLM Inference](https://arxiv.org/abs/2512.03024) - First token-level power benchmark
+- [Epoch AI Analysis](https://epoch.ai/) - Re-evaluated common estimates
+
+Key findings from research:
+- GPT-4o query: ~0.34 Wh per query (~0.001 Wh/token for 300-400 tokens)
+- Llama3-70B on H100: ~0.39 J/token (~0.0001 Wh/token)
+- Modern estimates: 2-3 J/token for typical inference
+
+### Cache Token Handling
+
+```
+cache_creation: 100% energy (full computation)
+cache_read:       1% energy (memory retrieval only)
+```
+
+Prompt caching allows reusing previously computed context. Reading cached tokens requires minimal energy compared to computing new tokens.
+
+### CO2 Conversion
+
+| Factor | Value | Source |
+|--------|-------|--------|
+| CO2 per kWh | 0.5 kg | Global average grid intensity |
+| Tree absorption | 14 kg CO2/year | Average mature tree |
+| Tree-day | 38.4 g CO2 | (14 kg / 365 days) |
+
+### Calculation Formula
+
+```
+Energy (Wh) = (input + output + reasoning + cache_creation) × energy_per_token
+            + cache_read × energy_per_token × 0.01
+
+CO2 (g) = Energy (kWh) × 500
+
+Tree-days = CO2 (g) / 38.4
+```
+
+## Rank System
+
+| CO2 | Rank | Title |
+|-----|------|-------|
+| < 100g | F | Eco Newbie |
+| < 500g | E | Carbon Curious |
+| < 1kg | D | Watt Watcher |
+| < 5kg | C | Power User |
+| < 10kg | B | Grid Gremlin |
+| < 50kg | A | Carbon Sorcerer |
+| < 100kg | S | Climate Chaos Agent |
+| < 500kg | S+ | Extinction Accelerator |
+| 500kg+ | S++ | Planet Destroyer |
+
+## Disclaimer
+
+These calculations are **estimates** based on publicly available research. Actual energy consumption depends on:
+
+- Specific hardware and data center efficiency
+- Geographic location and grid carbon intensity
+- Model optimization and quantization
+- Batch size and inference configuration
+
+Neither Anthropic nor other AI providers have published official energy consumption figures for their APIs.
 
 ## Why?
 

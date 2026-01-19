@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Watt Did AI Cost? | The Hidden Weight of Intelligence</title>
+  <title>ccwatt | The Hidden Weight of Intelligence</title>
   <meta name="description" content="Every token has a cost. Every query leaves a trace. How much of the Earth did your AI consume today?">
-  <meta property="og:title" content="Watt Did AI Cost?">
+  <meta property="og:title" content="ccwatt - Watt Did AI Cost?">
   <meta property="og:description" content="Every token has a cost. Every query leaves a trace.">
   <meta property="og:type" content="website">
   <meta property="og:image" content="https://nyanko3141592.github.io/ccwatt/og-image.png">
@@ -122,6 +122,13 @@
       color: var(--text-primary);
     }
 
+    h3 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 2rem 0 1rem 0;
+      color: var(--accent-green);
+    }
+
     p {
       font-size: 1.2rem;
       margin-bottom: 1.5rem;
@@ -150,7 +157,7 @@
     }
 
     .stat-number {
-      font-size: 3rem;
+      font-size: 2.5rem;
       font-weight: 600;
       color: var(--accent-green);
       font-family: 'JetBrains Mono', monospace;
@@ -205,6 +212,60 @@
       color: var(--text-primary);
     }
 
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 2rem 0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem;
+    }
+
+    th, td {
+      padding: 0.75rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    th {
+      color: var(--accent-green);
+      font-weight: 500;
+    }
+
+    td {
+      color: var(--text-secondary);
+    }
+
+    /* Code blocks */
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.9em;
+    }
+
+    pre {
+      background: #111;
+      padding: 1.5rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 1.5rem 0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+
+    /* Links */
+    a {
+      color: var(--accent-green);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
     /* CTA */
     .cta {
       text-align: center;
@@ -235,6 +296,7 @@
     .cta-button:hover {
       background: var(--accent-green);
       color: var(--bg-dark);
+      text-decoration: none;
     }
 
     /* Footer */
@@ -244,11 +306,6 @@
       color: var(--text-secondary);
       font-size: 0.9rem;
       border-top: 1px solid rgba(255, 255, 255, 0.05);
-    }
-
-    footer a {
-      color: var(--accent-green);
-      text-decoration: none;
     }
 
     /* Animations */
@@ -268,7 +325,6 @@
       50% { transform: translateY(-10px); }
     }
 
-    /* Intersection Observer animations */
     .fade-in {
       opacity: 0;
       transform: translateY(30px);
@@ -278,6 +334,16 @@
     .fade-in.visible {
       opacity: 1;
       transform: translateY(0);
+    }
+
+    /* Methodology section */
+    .methodology {
+      max-width: 800px;
+      background: rgba(255, 255, 255, 0.01);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      padding: 3rem;
+      margin: 2rem auto;
     }
   </style>
 </head>
@@ -322,34 +388,14 @@
       This isn't about shame. AI is transformative. It helps us code, create, learn, and solve problems we couldn't before.
     </p>
     <p class="fade-in">
-      But <strong>awareness changes behavior</strong>. When you see the trees, you start to think. When you think, you start to choose. Maybe you'll write a better prompt. Maybe you'll plant a tree. Maybe you'll just... pause.
+      But <strong>awareness changes behavior</strong>. When you see the trees, you start to think. When you think, you start to choose.
     </p>
-    <p class="fade-in">
-      That pause matters.
-    </p>
-  </section>
-
-  <section>
-    <div class="stats fade-in">
-      <div class="stat">
-        <div class="stat-number">~0.001</div>
-        <div class="stat-label">Wh per token (estimated)</div>
-      </div>
-      <div class="stat">
-        <div class="stat-number">14 kg</div>
-        <div class="stat-label">CO₂ absorbed by 1 tree/year</div>
-      </div>
-      <div class="stat">
-        <div class="stat-number">∞</div>
-        <div class="stat-label">Tokens we'll use tomorrow</div>
-      </div>
-    </div>
   </section>
 
   <section>
     <h2 class="fade-in">Measure Your Impact</h2>
     <p class="fade-in">
-      We built a simple tool. It reads your Claude Code usage and tells you, in trees, what it cost.
+      We built a tool that reads your AI coding assistant usage and tells you, in trees, what it cost. Supports <strong>Claude Code</strong> and <strong>OpenCode</strong>.
     </p>
 
     <div class="cli-section fade-in">
@@ -360,6 +406,104 @@
       <p style="font-size: 1rem; margin: 0;">
         No data leaves your machine. Just you and your trees.
       </p>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="fade-in">Calculation Methodology</h2>
+    <p class="fade-in">
+      Our estimates are based on peer-reviewed research from 2024-2025 on LLM inference energy consumption.
+    </p>
+
+    <div class="methodology fade-in">
+      <h3>Energy per Token</h3>
+      <p style="font-size: 1rem;">Based on model size and inference efficiency:</p>
+      <table>
+        <tr>
+          <th>Model Size</th>
+          <th>Energy</th>
+          <th>Examples</th>
+        </tr>
+        <tr>
+          <td>Huge (~175B+)</td>
+          <td>0.001 Wh/token</td>
+          <td>GPT-4, Claude Opus</td>
+        </tr>
+        <tr>
+          <td>Large (~70B)</td>
+          <td>0.0003 Wh/token</td>
+          <td>Claude Sonnet, GPT-4o</td>
+        </tr>
+        <tr>
+          <td>Medium (~20B)</td>
+          <td>0.0001 Wh/token</td>
+          <td>Claude Haiku, GPT-3.5</td>
+        </tr>
+        <tr>
+          <td>Small (~7B)</td>
+          <td>0.00003 Wh/token</td>
+          <td>Mistral Small</td>
+        </tr>
+      </table>
+
+      <h3>Cache Handling</h3>
+      <p style="font-size: 1rem;">
+        Prompt caching reuses previously computed context. Reading cached tokens requires minimal energy:
+      </p>
+      <pre>cache_creation: 100% energy (full computation)
+cache_read:       1% energy (memory retrieval only)</pre>
+
+      <h3>CO₂ Conversion</h3>
+      <table>
+        <tr>
+          <th>Factor</th>
+          <th>Value</th>
+          <th>Source</th>
+        </tr>
+        <tr>
+          <td>CO₂ per kWh</td>
+          <td>0.5 kg</td>
+          <td>Global average</td>
+        </tr>
+        <tr>
+          <td>Tree absorption</td>
+          <td>14 kg/year</td>
+          <td>Mature tree avg</td>
+        </tr>
+        <tr>
+          <td>Tree-day</td>
+          <td>38.4 g</td>
+          <td>14kg ÷ 365</td>
+        </tr>
+      </table>
+
+      <h3>Research Sources</h3>
+      <p style="font-size: 1rem;">
+        <a href="https://arxiv.org/abs/2505.09598" target="_blank">How Hungry is AI?</a> - Benchmarked 30 LLMs (May 2025)<br>
+        <a href="https://arxiv.org/abs/2512.03024" target="_blank">TokenPowerBench</a> - First token-level power benchmark (Dec 2025)<br>
+        <a href="https://epoch.ai/" target="_blank">Epoch AI</a> - Re-evaluated common estimates
+      </p>
+    </div>
+
+    <p class="fade-in" style="font-size: 1rem; font-style: italic;">
+      Note: These are estimates. Actual consumption depends on hardware, data center efficiency, and model optimization. No AI provider has published official energy figures for their APIs.
+    </p>
+  </section>
+
+  <section>
+    <div class="stats fade-in">
+      <div class="stat">
+        <div class="stat-number">0.0003</div>
+        <div class="stat-label">Wh per token (Sonnet-class)</div>
+      </div>
+      <div class="stat">
+        <div class="stat-number">14 kg</div>
+        <div class="stat-label">CO₂ absorbed by 1 tree/year</div>
+      </div>
+      <div class="stat">
+        <div class="stat-number">∞</div>
+        <div class="stat-label">Tokens we'll use tomorrow</div>
+      </div>
     </div>
   </section>
 
@@ -375,12 +519,11 @@
   <footer>
     <p>
       Built with awareness by <a href="https://github.com/nyanko3141592">@nyanko3141592</a><br>
-      <small>Calculation estimates based on research. Not official Anthropic data.</small>
+      <small>Estimates based on peer-reviewed research. Not official data from AI providers.</small>
     </p>
   </footer>
 
   <script>
-    // Intersection Observer for fade-in animations
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
