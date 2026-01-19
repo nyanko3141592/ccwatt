@@ -29,20 +29,23 @@ npx ccwatt
      🌳🌳🌳🌳🌳🌳🌳🌳🌳🌳
      🌳🌳🌳🌳🌳🌳🌳🌳🌳🌳
      🌳🌳🌳🌳🌳🌳🌳🌳🌳🌳
-     🌳🌳🌳🌳🌳🌳🌳
-     🌳 = 10 trees | 670 tree-days needed
+     🌳🌳🌳🌳🌳🌳🌳🌳
+     🌳 = 10 trees | 671 tree-days needed
 
 
-  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-  ┃ ⚡ CARBON STATUS REPORT ⚡             ┃
-  ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
-  ┃ Lv.73 Silicon Sorcerer                  ┃
-  ┃ 【A】 Carbon Sorcerer                     ┃
-  ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
-  ┃ ⚡ PWR   51.35 kWh ██████████ ┃
-  ┃ 💨 CO2    25.67 kg ███░░░░░░░ ┃
-  ┃ 🌳 TREE   670 days ██████████ ┃
-  ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+  ┃ ⚡ USAGE REPORT                   ┃
+  ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+  ┃ ⚡ Power       51.40 kWh         ┃
+  ┃ 💨 CO2          25.70 kg         ┃
+  ┃ 🌳 Trees        671 days         ┃
+  ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+  ┃ 📊 Tokens                         ┃
+  ┃    Input         30.65M         ┃
+  ┃    Output         3.02M         ┃
+  ┃    Cache          1.76B         ┃
+  ┃    Total          1.79B         ┃
+  ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
   📁 🟠 Claude Code: 381  🔷 OpenCode: 93
 ```
@@ -107,20 +110,6 @@ CO2 (g) = Energy (kWh) × 500
 
 Tree-days = CO2 (g) / 38.4
 ```
-
-## Rank System
-
-| CO2 | Rank | Title |
-|-----|------|-------|
-| < 100g | F | Eco Newbie |
-| < 500g | E | Carbon Curious |
-| < 1kg | D | Watt Watcher |
-| < 5kg | C | Power User |
-| < 10kg | B | Grid Gremlin |
-| < 50kg | A | Carbon Sorcerer |
-| < 100kg | S | Climate Chaos Agent |
-| < 500kg | S+ | Extinction Accelerator |
-| 500kg+ | S++ | Planet Destroyer |
 
 ## Disclaimer
 
