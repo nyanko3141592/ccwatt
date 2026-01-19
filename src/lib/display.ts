@@ -79,7 +79,12 @@ function getRandomFlavorTitle(): string {
   return FLAVOR_TITLES[Math.floor(Math.random() * FLAVOR_TITLES.length)]
 }
 
-export function displayResult(result: EnergyResult, sessionCount: number): void {
+export interface SourceCounts {
+  claudeCode: number
+  opencode: number
+}
+
+export function displayResult(result: EnergyResult, sessionCount: number, sources?: SourceCounts): void {
   const rank = getRank(result.co2Grams)
   const nextRank = getNextRank(result.co2Grams)
   const level = getLevel(result.co2Grams)
@@ -181,7 +186,14 @@ export function displayResult(result: EnergyResult, sessionCount: number): void 
   }
 
   // Session info
-  console.log(chalk.gray(`  📁 Analyzed ${sessionCount} sessions`))
+  if (sources && (sources.claudeCode > 0 || sources.opencode > 0)) {
+    const parts: string[] = []
+    if (sources.claudeCode > 0) parts.push(`🟠 Claude Code: ${sources.claudeCode}`)
+    if (sources.opencode > 0) parts.push(`🔷 OpenCode: ${sources.opencode}`)
+    console.log(chalk.gray(`  📁 ${parts.join('  ')}`))
+  } else {
+    console.log(chalk.gray(`  📁 Analyzed ${sessionCount} sessions`))
+  }
   console.log()
 }
 
@@ -193,9 +205,9 @@ export function displayNoData(): void {
   console.log(chalk.gray('  ┃') + `  ${chalk.bold.white('Lv.0')} ${chalk.green('Eco Warrior')}`.padEnd(52) + chalk.gray('┃'))
   console.log(chalk.gray('  ┃') + `  ${chalk.green('【 ? 】')} ${chalk.gray('No data yet')}`.padEnd(52) + chalk.gray('┃'))
   console.log(chalk.gray('  ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫'))
-  console.log(chalk.gray('  ┃') + chalk.yellow('  🔍 No Claude Code usage data found       ') + chalk.gray('┃'))
-  console.log(chalk.gray('  ┃') + chalk.gray('     Data lives in ~/.claude/projects/     ') + chalk.gray('┃'))
-  console.log(chalk.gray('  ┃') + chalk.gray('     Use Claude Code to start tracking!    ') + chalk.gray('┃'))
+  console.log(chalk.gray('  ┃') + chalk.yellow('  🔍 No AI usage data found                ') + chalk.gray('┃'))
+  console.log(chalk.gray('  ┃') + chalk.gray('     Supported: Claude Code, OpenCode      ') + chalk.gray('┃'))
+  console.log(chalk.gray('  ┃') + chalk.gray('     Start using an AI coding tool!        ') + chalk.gray('┃'))
   console.log(chalk.gray('  ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫'))
   console.log(chalk.gray('  ┃') + chalk.green('  🌱 Carbon footprint: 0                   ') + chalk.gray('┃'))
   console.log(chalk.gray('  ┃') + chalk.green('     Earth thanks you... for now.          ') + chalk.gray('┃'))

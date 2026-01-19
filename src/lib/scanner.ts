@@ -1,9 +1,9 @@
-// ~/.claude/ ディレクトリをスキャンしてJSONLファイルを解析
+// Scan ~/.claude/ directory for JSONL session files
 
 import { readdir, readFile, stat } from 'node:fs/promises'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
-import type { ModelType, TokenUsage } from './calculator.js'
+import type { TokenUsage } from './calculator.js'
 
 interface ClaudeMessage {
   type?: string
@@ -24,15 +24,7 @@ export interface SessionInfo {
   usage: TokenUsage
   messageCount: number
   lastModified: Date
-}
-
-function detectModel(modelString: string | undefined): ModelType {
-  if (!modelString) return 'unknown'
-  const lower = modelString.toLowerCase()
-  if (lower.includes('opus')) return 'opus'
-  if (lower.includes('haiku')) return 'haiku'
-  if (lower.includes('sonnet')) return 'sonnet'
-  return 'unknown'
+  source: 'claude-code' | 'opencode'
 }
 
 async function parseJsonlFile(filePath: string): Promise<{ usage: TokenUsage; messageCount: number }> {
@@ -44,7 +36,7 @@ async function parseJsonlFile(filePath: string): Promise<{ usage: TokenUsage; me
   let cacheCreationTokens = 0
   let cacheReadTokens = 0
   let messageCount = 0
-  let model: ModelType = 'unknown'
+  let model = 'unknown'
 
   for (const line of lines) {
     if (!line.trim()) continue
@@ -59,15 +51,23 @@ async function parseJsonlFile(filePath: string): Promise<{ usage: TokenUsage; me
         messageCount++
       }
       if (data.message?.model) {
-        model = detectModel(data.message.model)
+        model = data.message.model
       }
     } catch {
-      // JSONパースエラーは無視
+      // Ignore JSON parse errors
     }
   }
 
   return {
-    usage: { inputTokens, outputTokens, cacheCreationTokens, cacheReadTokens, model },
+    usage: {
+      inputTokens,
+      outputTokens,
+      cacheCreationTokens,
+      cacheReadTokens,
+      reasoningTokens: 0,
+      model,
+      provider: 'anthropic'
+    },
     messageCount,
   }
 }
@@ -87,7 +87,7 @@ async function findJsonlFiles(dir: string): Promise<string[]> {
         }
       }
     } catch {
-      // アクセスエラーは無視
+      // Ignore access errors
     }
   }
 
@@ -116,9 +116,10 @@ export async function scanClaudeDirectory(): Promise<SessionInfo[]> {
         usage,
         messageCount,
         lastModified: fileStat.mtime,
+        source: 'claude-code',
       })
     } catch {
-      // ファイル読み込みエラーは無視
+      // Ignore file read errors
     }
   }
 

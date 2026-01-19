@@ -1,27 +1,111 @@
-// 電力消費計算ロジック
+// Energy consumption calculation logic
 
-export type ModelType = 'opus' | 'sonnet' | 'haiku' | 'unknown'
+// Model categories based on estimated energy per token
+export type ModelCategory =
+  | 'huge'     // GPT-4, Claude Opus, Gemini Ultra
+  | 'large'    // GPT-4-turbo, Claude Sonnet, Gemini Pro
+  | 'medium'   // GPT-3.5, Claude Haiku, Gemini Flash
+  | 'small'    // Lightweight models
+  | 'unknown'
 
-// Wh per token (推定値)
-const ENERGY_PER_TOKEN: Record<ModelType, number> = {
-  opus: 0.003,
-  sonnet: 0.001,
-  haiku: 0.0003,
-  unknown: 0.001, // デフォルトはsonnet相当
+// Wh per token (estimates based on model size and efficiency)
+const ENERGY_PER_TOKEN: Record<ModelCategory, number> = {
+  huge: 0.003,     // ~175B+ params (GPT-4, Opus)
+  large: 0.001,    // ~70B params (Sonnet, GPT-4-turbo)
+  medium: 0.0003,  // ~20B params (Haiku, GPT-3.5)
+  small: 0.0001,   // ~7B params (small models)
+  unknown: 0.001,  // Default to large
 }
 
-// CO2排出係数 (kg-CO2/kWh)
+// CO2 emission factor (kg-CO2/kWh) - global average
 const CO2_PER_KWH = 0.5
 
-// 木1本が1年間に吸収するCO2 (kg)
+// CO2 absorbed by 1 tree per year (kg)
 const CO2_PER_TREE_PER_YEAR = 14
+
+// Model mapping to categories
+const MODEL_CATEGORIES: Record<string, ModelCategory> = {
+  // Claude (Anthropic)
+  'opus': 'huge',
+  'claude-3-opus': 'huge',
+  'claude-opus-4': 'huge',
+  'sonnet': 'large',
+  'claude-3-sonnet': 'large',
+  'claude-3.5-sonnet': 'large',
+  'claude-sonnet-4': 'large',
+  'haiku': 'medium',
+  'claude-3-haiku': 'medium',
+  'claude-3.5-haiku': 'medium',
+
+  // OpenAI
+  'gpt-4': 'huge',
+  'gpt-4-turbo': 'large',
+  'gpt-4o': 'large',
+  'gpt-4o-mini': 'medium',
+  'gpt-3.5-turbo': 'medium',
+  'gpt-3.5': 'medium',
+  'o1': 'huge',
+  'o1-mini': 'large',
+  'o1-preview': 'huge',
+  'o3-mini': 'large',
+
+  // Google
+  'gemini-ultra': 'huge',
+  'gemini-pro': 'large',
+  'gemini-1.5-pro': 'large',
+  'gemini-1.5-flash': 'medium',
+  'gemini-2.0-flash': 'medium',
+
+  // DeepSeek
+  'deepseek-chat': 'large',
+  'deepseek-coder': 'large',
+  'deepseek-v3': 'large',
+  'deepseek-r1': 'large',
+
+  // Zhipu AI (GLM)
+  'glm-4': 'large',
+  'glm-4.7': 'large',
+  'glm-4.7-free': 'large',
+  'glm-3-turbo': 'medium',
+
+  // Alibaba (Qwen)
+  'qwen-turbo': 'medium',
+  'qwen-plus': 'large',
+  'qwen-max': 'huge',
+  'qwen2.5': 'large',
+
+  // Meta (Llama)
+  'llama-3': 'large',
+  'llama-3.1': 'large',
+  'llama-3.2': 'large',
+  'llama-3-70b': 'large',
+  'llama-3-8b': 'medium',
+  'codellama': 'large',
+
+  // Mistral
+  'mistral-large': 'large',
+  'mistral-medium': 'medium',
+  'mistral-small': 'small',
+  'mixtral': 'large',
+  'codestral': 'large',
+
+  // Cohere
+  'command-r': 'large',
+  'command-r-plus': 'huge',
+
+  // xAI
+  'grok': 'large',
+  'grok-2': 'large',
+}
 
 export interface TokenUsage {
   inputTokens: number
   outputTokens: number
   cacheCreationTokens: number
   cacheReadTokens: number
-  model: ModelType
+  reasoningTokens: number
+  model: string
+  provider: string
 }
 
 export interface EnergyResult {
@@ -29,16 +113,38 @@ export interface EnergyResult {
   inputTokens: number
   outputTokens: number
   cacheTokens: number
+  reasoningTokens: number
   energyWh: number
   co2Grams: number
   treeDays: number
-  model: ModelType
+  model: string
+  provider: string
+}
+
+export function getModelCategory(modelId: string): ModelCategory {
+  const lower = modelId.toLowerCase()
+
+  // Direct match
+  for (const [key, category] of Object.entries(MODEL_CATEGORIES)) {
+    if (lower.includes(key)) {
+      return category
+    }
+  }
+
+  // Fallback heuristics
+  if (lower.includes('opus') || lower.includes('ultra') || lower.includes('max')) return 'huge'
+  if (lower.includes('haiku') || lower.includes('mini') || lower.includes('flash') || lower.includes('turbo')) return 'medium'
+  if (lower.includes('sonnet') || lower.includes('pro') || lower.includes('plus')) return 'large'
+
+  return 'unknown'
 }
 
 export function calculateEnergy(usage: TokenUsage): EnergyResult {
   const cacheTokens = usage.cacheCreationTokens + usage.cacheReadTokens
-  const totalTokens = usage.inputTokens + usage.outputTokens + cacheTokens
-  const energyWh = totalTokens * ENERGY_PER_TOKEN[usage.model]
+  const totalTokens = usage.inputTokens + usage.outputTokens + cacheTokens + usage.reasoningTokens
+
+  const category = getModelCategory(usage.model)
+  const energyWh = totalTokens * ENERGY_PER_TOKEN[category]
   const co2Kg = (energyWh / 1000) * CO2_PER_KWH
   const co2Grams = co2Kg * 1000
   const co2PerTreePerDay = (CO2_PER_TREE_PER_YEAR * 1000) / 365
@@ -49,10 +155,12 @@ export function calculateEnergy(usage: TokenUsage): EnergyResult {
     inputTokens: usage.inputTokens,
     outputTokens: usage.outputTokens,
     cacheTokens,
+    reasoningTokens: usage.reasoningTokens,
     energyWh,
     co2Grams,
     treeDays,
     model: usage.model,
+    provider: usage.provider,
   }
 }
 
@@ -63,15 +171,32 @@ export function aggregateUsages(usages: TokenUsage[]): TokenUsage {
       outputTokens: acc.outputTokens + u.outputTokens,
       cacheCreationTokens: acc.cacheCreationTokens + u.cacheCreationTokens,
       cacheReadTokens: acc.cacheReadTokens + u.cacheReadTokens,
-      model: u.model !== 'unknown' ? u.model : acc.model,
+      reasoningTokens: acc.reasoningTokens + u.reasoningTokens,
+      model: u.model || acc.model,
+      provider: u.provider || acc.provider,
     }),
-    { inputTokens: 0, outputTokens: 0, cacheCreationTokens: 0, cacheReadTokens: 0, model: 'unknown' as ModelType }
+    {
+      inputTokens: 0,
+      outputTokens: 0,
+      cacheCreationTokens: 0,
+      cacheReadTokens: 0,
+      reasoningTokens: 0,
+      model: 'unknown',
+      provider: 'unknown'
+    }
   )
 }
 
-export const MODEL_NAMES: Record<ModelType, string> = {
-  opus: 'Opus',
-  sonnet: 'Sonnet',
-  haiku: 'Haiku',
-  unknown: 'Unknown',
+export function getProviderEmoji(provider: string): string {
+  const lower = provider.toLowerCase()
+  if (lower.includes('anthropic') || lower.includes('claude')) return '🟠'
+  if (lower.includes('openai') || lower.includes('gpt')) return '🟢'
+  if (lower.includes('google') || lower.includes('gemini')) return '🔵'
+  if (lower.includes('deepseek')) return '🐋'
+  if (lower.includes('zhipu') || lower.includes('glm')) return '🀄'
+  if (lower.includes('alibaba') || lower.includes('qwen')) return '☁️'
+  if (lower.includes('meta') || lower.includes('llama')) return '🦙'
+  if (lower.includes('mistral')) return '🌬️'
+  if (lower.includes('xai') || lower.includes('grok')) return '✖️'
+  return '🤖'
 }
