@@ -1,51 +1,89 @@
-// ターミナル表示
+// Terminal display - Full package edition
 
 import chalk from 'chalk'
-import Table from 'cli-table3'
 import type { EnergyResult } from './calculator.js'
 
-export function generateTreeViz(treeDays: number): { trees: string; description: string } {
-  const treeCount = Math.min(Math.ceil(treeDays), 15)
-
-  let trees = ''
-  for (let i = 0; i < treeCount; i++) {
-    trees += '🌳'
-  }
-  if (treeDays > 15) {
-    trees += ` +${Math.round(treeDays - 15)}`
-  }
-  if (treeCount === 0) {
-    trees = '🌱'
-  }
-
-  let description: string
-  if (treeDays < 0.1) {
-    description = '木にとってはほんのひと呼吸'
-  } else if (treeDays < 1) {
-    const hours = Math.round(treeDays * 24)
-    description = `木1本が${hours}時間で吸収できる量`
-  } else if (treeDays < 7) {
-    description = `木1本が${Math.round(treeDays)}日かけて吸収する量`
-  } else if (treeDays < 30) {
-    description = `木1本が約${Math.round(treeDays / 7)}週間かけて吸収する量`
-  } else if (treeDays < 365) {
-    description = `木1本が約${Math.round(treeDays / 30)}ヶ月かけて吸収する量`
-  } else {
-    description = `木1本が約${(treeDays / 365).toFixed(1)}年かけて吸収する量`
-  }
-
-  return { trees, description }
+// Random humorous comments
+const COMMENTS = {
+  tiny: [
+    'Adorable usage 🐣',
+    'Earth says "thanks!"',
+    'Tree: "Easy peasy" 🌳',
+    'Are you even trying?',
+  ],
+  small: [
+    "Still fine... probably",
+    'AI runs on electricity, you know',
+    'A tree did a little work',
+    'Earth: "I\'ll allow it"',
+  ],
+  medium: [
+    'Using more than you thought...?',
+    'Tree: "Hold on a sec"',
+    'Maybe plant a tree sometime?',
+    'Earth: "Hmm..."',
+  ],
+  large: [
+    "That's quite a lot 😅",
+    'Tree: "Overtime again" 🌲💦',
+    'AI addiction much?',
+    'Earth: "Hey now..."',
+  ],
+  huge: [
+    'Tree is dying inside 🌲😵',
+    "Anthropic's power bill must be wild",
+    'Go plant a forest 🌱',
+    'Earth: "Are you listening?"',
+  ],
+  extreme: [
+    'Tree: "I quit" 🪵',
+    'Basically deforestation at this point',
+    'Power company: "Our best customer!"',
+    'Earth: "..."',
+  ],
 }
 
-export function generateComment(treeDays: number): string {
-  if (treeDays < 0.1) return 'エコなAI活用ですね 🌿'
-  if (treeDays < 0.5) return 'AIも少しずつ電気を使ってます'
-  if (treeDays < 1) return '木が半日がんばる量... 🌲'
-  if (treeDays < 3) return '意外と使ってるかも? 🤔'
-  if (treeDays < 7) return '木が1週間近くがんばる量です 💪'
-  if (treeDays < 30) return 'けっこう使ってますね 😅'
-  if (treeDays < 100) return '木も大変そう... 🌳💦'
-  return '木、がんばれ... 🌲🌲🌲'
+// Fun comparisons
+const FUNNY_COMPARISONS = [
+  { emoji: '☕', name: 'cups of coffee', wh: 100, verb: 'brew' },
+  { emoji: '🍞', name: 'slices of toast', wh: 50, verb: 'make' },
+  { emoji: '📱', name: 'phone charges', wh: 10, verb: 'do' },
+  { emoji: '🎮', name: 'hours of PS5', wh: 200, verb: 'play' },
+  { emoji: '📺', name: 'hours of Netflix', wh: 100, verb: 'watch' },
+  { emoji: '🚗', name: 'km in a Tesla', wh: 150, verb: 'drive' },
+  { emoji: '🛁', name: 'min of hairdryer', wh: 1200, verb: 'use' },
+  { emoji: '🍳', name: 'eggs on induction', wh: 100, verb: 'fry' },
+  { emoji: '🧊', name: 'hours of fridge', wh: 50, verb: 'run' },
+  { emoji: '💡', name: 'hours of LED bulb', wh: 10, verb: 'light' },
+]
+
+function getRandomComment(treeDays: number): string {
+  let category: keyof typeof COMMENTS
+  if (treeDays < 0.1) category = 'tiny'
+  else if (treeDays < 1) category = 'small'
+  else if (treeDays < 7) category = 'medium'
+  else if (treeDays < 30) category = 'large'
+  else if (treeDays < 365) category = 'huge'
+  else category = 'extreme'
+
+  const comments = COMMENTS[category]
+  return comments[Math.floor(Math.random() * comments.length)]
+}
+
+function getRandomComparisons(energyWh: number, count: number = 3): string[] {
+  const shuffled = [...FUNNY_COMPARISONS].sort(() => Math.random() - 0.5)
+  const results: string[] = []
+
+  for (const comp of shuffled) {
+    if (results.length >= count) break
+    const value = energyWh / comp.wh
+    if (value >= 0.1) {
+      const formatted = value >= 100 ? Math.round(value).toLocaleString() : value.toFixed(1)
+      results.push(`${comp.emoji} ${comp.verb} ${formatted} ${comp.name}`)
+    }
+  }
+
+  return results
 }
 
 function formatNumber(n: number): string {
@@ -54,73 +92,163 @@ function formatNumber(n: number): string {
   return n.toLocaleString()
 }
 
+// Progress bar
+function generateProgressBar(percentage: number, width: number = 20): string {
+  const capped = Math.min(percentage, 100)
+  const filled = Math.round((capped / 100) * width)
+  const empty = width - filled
+
+  let color: (s: string) => string
+  if (percentage < 25) color = chalk.green
+  else if (percentage < 50) color = chalk.yellow
+  else if (percentage < 75) color = chalk.hex('#FFA500')
+  else color = chalk.red
+
+  const bar = color('█'.repeat(filled)) + chalk.gray('░'.repeat(empty))
+  return bar
+}
+
+// Tree ASCII art (changes with usage)
+function getTreeArt(treeDays: number): string[] {
+  if (treeDays < 0.1) {
+    return [
+      '    ',
+      ' 🌱 ',
+      '    ',
+    ]
+  } else if (treeDays < 1) {
+    return [
+      '  🌿  ',
+      '  ||  ',
+      ' _||_ ',
+    ]
+  } else if (treeDays < 7) {
+    return [
+      '   🌳   ',
+      '   ||   ',
+      '  _||_  ',
+      ' /____\\ ',
+    ]
+  } else if (treeDays < 30) {
+    return [
+      '  🌳💦  ',
+      '   ||   ',
+      '  _||_  ',
+      ' /____\\ ',
+    ]
+  } else if (treeDays < 100) {
+    return [
+      ' 🌲🌳🌲 ',
+      '  💦💦  ',
+      '  |||||  ',
+    ]
+  } else if (treeDays < 365) {
+    return [
+      '🌲🔥🌳🔥🌲',
+      '   💦💦   ',
+      '  |||||||  ',
+    ]
+  } else {
+    return [
+      '  🪵  🪵  🪵  ',
+      ' 💀 R.I.P. 💀 ',
+      '     🌱      ',
+      '  (hope remains) ',
+    ]
+  }
+}
+
 export function displayResult(result: EnergyResult, sessionCount: number): void {
-  const { trees, description } = generateTreeViz(result.treeDays)
-  const comment = generateComment(result.treeDays)
+  const treeArt = getTreeArt(result.treeDays)
+  const comment = getRandomComment(result.treeDays)
+  const comparisons = getRandomComparisons(result.energyWh)
+
+  const loadPercentage = Math.min((result.treeDays / 365) * 100, 100)
 
   console.log()
-  console.log(chalk.bold.cyan('  ⚡ Watt Did AI Cost'))
-  console.log(chalk.gray('  ─'.repeat(20)))
+  console.log(chalk.bold.cyan('  ╭─────────────────────────────────────╮'))
+  console.log(chalk.bold.cyan('  │') + chalk.bold('    ⚡ Watt Did AI Cost? ⚡          ') + chalk.bold.cyan('│'))
+  console.log(chalk.bold.cyan('  │') + chalk.gray('    How much power did your AI use? ') + chalk.bold.cyan('│'))
+  console.log(chalk.bold.cyan('  ╰─────────────────────────────────────╯'))
   console.log()
 
-  // トークン情報テーブル
-  const tokenTable = new Table({
-    chars: { mid: '', 'left-mid': '', 'mid-mid': '', 'right-mid': '' },
-    style: { 'padding-left': 2, 'padding-right': 2 },
-  })
-
-  tokenTable.push(
-    [chalk.gray('入力トークン'), chalk.white(formatNumber(result.inputTokens))],
-    [chalk.gray('出力トークン'), chalk.white(formatNumber(result.outputTokens))],
-    [chalk.gray('キャッシュ'), chalk.white(formatNumber(result.cacheTokens))],
-    [chalk.gray('合計'), chalk.bold.white(formatNumber(result.totalTokens))],
-  )
-
-  console.log(tokenTable.toString())
+  // ASCII art
+  for (const line of treeArt) {
+    console.log(chalk.green('                ' + line))
+  }
   console.log()
 
-  // エネルギー情報
-  console.log(chalk.gray('  ─'.repeat(20)))
+  // Token info
+  console.log(chalk.gray('  📊 Token Usage'))
+  console.log(chalk.gray('  ─────────────────────────────────────'))
+  console.log(`     Input: ${chalk.white(formatNumber(result.inputTokens))}  Output: ${chalk.white(formatNumber(result.outputTokens))}  Cache: ${chalk.white(formatNumber(result.cacheTokens))}`)
+  console.log(`     ${chalk.bold('Total')}: ${chalk.bold.white(formatNumber(result.totalTokens))} tokens`)
   console.log()
 
-  const energyWh = result.energyWh >= 1000
+  // Energy info
+  const energyStr = result.energyWh >= 1000
     ? `${(result.energyWh / 1000).toFixed(2)} kWh`
     : `${result.energyWh.toFixed(1)} Wh`
-
-  const co2 = result.co2Grams >= 1000
+  const co2Str = result.co2Grams >= 1000
     ? `${(result.co2Grams / 1000).toFixed(2)} kg`
     : `${result.co2Grams.toFixed(1)} g`
 
-  console.log(`  ${chalk.yellow('⚡')} 電力消費:  ${chalk.bold.yellow(energyWh)}`)
-  console.log(`  ${chalk.blue('💨')} CO2排出:   ${chalk.bold.blue(co2)}`)
+  console.log(chalk.gray('  ⚡ Energy & CO2'))
+  console.log(chalk.gray('  ─────────────────────────────────────'))
+  console.log(`     Power: ${chalk.bold.yellow(energyStr)}`)
+  console.log(`     CO2:   ${chalk.bold.blue(co2Str)}`)
   console.log()
 
-  // 木の視覚化
-  console.log(chalk.gray('  ─'.repeat(20)))
-  console.log()
-  console.log(chalk.green(`  ${trees}`))
-  console.log()
-  console.log(chalk.white(`  ${description}`))
-  console.log()
+  // Earth load meter
+  console.log(chalk.gray('  🌍 Earth Load Meter'))
+  console.log(chalk.gray('  ─────────────────────────────────────'))
+  const bar = generateProgressBar(loadPercentage, 25)
+  const percentStr = loadPercentage >= 100 ? '100%+' : `${loadPercentage.toFixed(1)}%`
+  console.log(`     [${bar}] ${percentStr}`)
 
-  // コメント
-  console.log(chalk.gray('  ─'.repeat(20)))
-  console.log()
-  console.log(chalk.italic(`  ${comment}`))
-  console.log()
-
-  // セッション数
-  if (sessionCount > 0) {
-    console.log(chalk.gray(`  📁 ${sessionCount} セッションを分析`))
-    console.log()
+  // Tree absorption time
+  let treeTimeStr: string
+  if (result.treeDays < 1) {
+    treeTimeStr = `${Math.round(result.treeDays * 24)} hours`
+  } else if (result.treeDays < 30) {
+    treeTimeStr = `${Math.round(result.treeDays)} days`
+  } else if (result.treeDays < 365) {
+    treeTimeStr = `${(result.treeDays / 30).toFixed(1)} months`
+  } else {
+    treeTimeStr = `${(result.treeDays / 365).toFixed(1)} years`
   }
+  console.log(chalk.gray(`     1 tree needs ${chalk.white(treeTimeStr)} to absorb this`))
+  console.log()
+
+  // Fun comparisons
+  console.log(chalk.gray('  🎯 With this much power you could...'))
+  console.log(chalk.gray('  ─────────────────────────────────────'))
+  for (const comp of comparisons) {
+    console.log(`     ${comp}`)
+  }
+  console.log()
+
+  // Random comment
+  console.log(chalk.gray('  ─────────────────────────────────────'))
+  console.log(chalk.italic(`     ${comment}`))
+  console.log()
+
+  // Session count
+  console.log(chalk.gray(`  📁 Analyzed ${sessionCount} sessions`))
+  console.log()
 }
 
 export function displayNoData(): void {
   console.log()
-  console.log(chalk.yellow('  🔍 Claude Code の使用データが見つかりませんでした'))
+  console.log(chalk.bold.cyan('  ╭─────────────────────────────────────╮'))
+  console.log(chalk.bold.cyan('  │') + chalk.bold('    ⚡ Watt Did AI Cost? ⚡          ') + chalk.bold.cyan('│'))
+  console.log(chalk.bold.cyan('  ╰─────────────────────────────────────╯'))
   console.log()
-  console.log(chalk.gray('  データは ~/.claude/projects/ に保存されます'))
-  console.log(chalk.gray('  Claude Code を使ってみてください!'))
+  console.log(chalk.yellow('     🔍 No Claude Code usage data found'))
+  console.log()
+  console.log(chalk.gray('     Data is stored in ~/.claude/projects/'))
+  console.log(chalk.gray('     Try using Claude Code first!'))
+  console.log()
+  console.log(chalk.green('     🌱 Still eco-friendly for now'))
   console.log()
 }

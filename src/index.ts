@@ -9,13 +9,13 @@ import { displayResult, displayNoData } from './lib/display.js'
 
 program
   .name('watt')
-  .description('あなたのAI、何ワット使った? 🌳')
+  .description('How much power did your AI use? 🌳')
   .version('0.1.0')
-  .option('-j, --json', 'JSON形式で出力')
-  .option('-q, --quiet', '木だけ表示')
+  .option('-j, --json', 'Output as JSON')
+  .option('-q, --quiet', 'Show trees only')
   .action(async (options) => {
     const spinner = ora({
-      text: 'Claude Code の使用データをスキャン中...',
+      text: 'Scanning Claude Code usage data...',
       color: 'green',
     }).start()
 
@@ -28,7 +28,7 @@ program
         return
       }
 
-      spinner.succeed(`${sessions.length} セッションを発見`)
+      spinner.succeed(`Found ${sessions.length} sessions`)
 
       // 全セッションの使用量を集計
       const usages = sessions.map((s) => s.usage)
